@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abstract-cot"
+version = "0.0.0"
+description = "Reproduction of Ramji et al. 2026 'Thinking Without Words' (arXiv:2604.22709)"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.5",
+    "transformers>=4.46",
+    "trl>=0.13",
+    "peft>=0.13",
+    "bitsandbytes>=0.43",
+    "datasets>=2.20",
+    "accelerate>=1.0",
+    "openai>=1.40",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[tool.setuptools.packages.find]
+include = ["abstract_cot*"]
+exclude = ["tests*", "notes*", "outputs*", "logs*", "data*", "configs*", "slurm*", "eval*", "scripts*"]

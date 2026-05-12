@@ -1,0 +1,16 @@
+data/
+logs/
+outputs/
+__pycache__/
+*.pyc
+.venv/
+.env
+*.ckpt
+*.safetensors
+*.bin
+.DS_Store
+notes/paper-v2.pdf
+.pytest_cache/
+*.egg-info/
+build/
+dist/

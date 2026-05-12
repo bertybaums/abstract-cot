@@ -1,0 +1,74 @@
+# Granite 4.0 Micro (3B) — Tier-1 primary config
+# All numbers tracked back to paper defaults; values marked "[scaled]" are
+# reduced from the paper's 8x/32x H100 budget to fortyfive's 1-2x A100.
+
+model:
+  hf_id: ibm-granite/granite-4.0-micro
+  dtype: bfloat16
+  attn_implementation: flex_attention  # for the block-structured mask
+  disable_thinking_mode: true           # paper compares without it
+
+codebook:
+  M: 64                                 # paper's best
+  m_max: 128
+  begin_delim: "<beginabstract>"
+  end_delim: "<endabstract>"
+  token_prefix: "TOKEN_"
+  init_std_scale: 1.0                    # match mean norm of existing embeddings
+
+data:
+  warmup_dataset: allenai/Dolci-Think-SFT-7B
+  warmup_subsample: 100000              # [scaled] paper used 600k
+  rl_dataset: allenai/Dolci-Think-RL-7B
+  rl_prompt_budget: 100000              # [scaled] paper used 1M episodes
+  max_seq_length: 2048
+
+warmup:
+  policy_iterations: 3                  # T in Algorithm 1
+  bottlenecked_sft:
+    epochs: 3
+    batch_size: 4
+    grad_accum: 4
+    learning_rate: 2e-5                 # full FT; QLoRA variant uses 2e-4
+    warmup_ratio: 0.03
+    embed_lr_multiplier: 10.0           # higher LR on new embedding rows
+  self_distillation:
+    epochs: 3
+    batch_size: 4
+    grad_accum: 4
+    learning_rate: 2e-5
+    sampling:
+      temperature: 1.0
+      top_p: 0.95
+
+rl:
+  algorithm: grpo
+  rollouts_per_prompt: 4                # K
+  episodes: 100000                      # [scaled]
+  batch_size: 4
+  learning_rate: 1e-6
+  kl_coef: 0.04
+  reward:
+    backend: mindrouter
+    model: openai/gpt-oss-20b
+    concurrency: 4                      # MindRouter cap
+    cache: true
+    prompt_path: configs/reward_prompt.txt
+  reference_policy: warmup_final         # path filled at runtime
+
+eval:
+  math500_samples: 500
+  alpaca_eval_samples: 805
+  hotpotqa_samples: 500
+  judge_model: openai/gpt-oss-120b      # via MindRouter — substituted for paper's GPT-4
+  aime25_samples: 30                    # sanity-check only
+  gpqa_samples: 50                      # sanity-check only
+
+slurm:
+  partition: cmci-gpu-8
+  exclude_nodes: n113
+  gres: gpu:a100:1
+  warmup_time: 3-00:00:00
+  rl_time: 4-00:00:00
+  cpus: 8
+  mem: 64G
