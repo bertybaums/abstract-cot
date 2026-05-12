@@ -29,23 +29,22 @@
 - [ ] `huggingface-cli download hotpot_qa --repo-type dataset`
 
 ## MindRouter sanity check
-- [ ] From login node: hit `/v1/models`, confirm `openai/gpt-oss-20b` is listed
-- [ ] Send a dummy reward prompt to `openai/gpt-oss-20b`, verify integer-only output
-- [ ] Measure round-trip latency × 20 samples; record in `notes/mindrouter_latency.md`
-- [ ] **Critical:** test from a compute node — does the job have internet at all? If not, design around it (login-node orchestrator or SSH tunnel)
+- [x] From login node: hit `/v1/models`, confirm `openai/gpt-oss-20b` is listed — done 2026-05-12
+- [x] Send a dummy reward prompt to `openai/gpt-oss-20b` (HTTP 200, ~0.5s) — done 2026-05-12
+- [x] **Critical:** test from a compute node — compute nodes HAVE internet to MindRouter. /v1/models 200 OK in 0.33s, chat completion 200 OK in 0.41s. **No SSH tunnel needed.**
+- [ ] Real reward latency × 20 samples with `reasoning_effort: medium` — record in `notes/mindrouter_latency.md`
 
 ## Engineering smoke tests
-- [ ] `abstract_cot/tokenizer.py`: load Granite, extend with 64 tokens + 2 delimiters, save, reload, assert vocab size grew by 66
-- [ ] `abstract_cot/attention_masks.py`:
-  - construct a toy `(prompt=4, cot=6, abs=4, ans=3)` sample
-  - build mask via flex_attention API
-  - build mask via eager `(seq_len, seq_len)` manual construction
-  - assert equivalence on a forward pass
-- [ ] `abstract_cot/constrained_decoding.py`:
-  - generate 10 sequences from extended-tokenizer Granite
-  - assert every abstract span is ⊆ V_abs ∪ {<endabstract>}
-  - assert m ≤ m_max in every sample
-- [ ] `abstract_cot/reward_model.py`: score 5 dummy completions, verify async + semaphore=4 + cache hit on duplicate
+- [x] `abstract_cot/tokenizer.py`: load Granite, extend with 64 tokens + 2 delimiters, save, reload, assert vocab size grew by 66 — done 2026-05-12 (7 unit tests + real-Granite smoke)
+- [ ] `abstract_cot/attention_masks.py`: flex_attention variant (production speed). Eager 4D-mask path is done + tested.
+- [x] `abstract_cot/attention_masks.py` eager path:
+  - construct a toy `(prompt=2, cot=3, abs=2, ans=2)` sample → 8 mask-structure tests pass
+  - end-to-end: forward pass with output_attentions=True, assert y attention on c < 1e-6 at every layer
+- [x] `abstract_cot/constrained_decoding.py`:
+  - generate sequences from extended tiny-gpt2; assert every abstract span ⊆ V_abs ∪ {<endabstract>}
+  - assert m ≤ m_max via force-end test
+  - 8 unit tests pass
+- [x] `abstract_cot/reward_model.py`: 15 unit tests pass — caching, retries, content/reasoning_content fallback, token-bucket rate limit, batch concurrency
 
 ## End-to-end toy run
 - [ ] 4-example toy batch through `bottlenecked_sft.py` for 5 steps; confirm loss drops
