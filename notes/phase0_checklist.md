@@ -47,8 +47,13 @@
 - [x] `abstract_cot/reward_model.py`: 15 unit tests pass — caching, retries, content/reasoning_content fallback, token-bucket rate limit, batch concurrency
 
 ## End-to-end toy run
-- [ ] 4-example toy batch through `bottlenecked_sft.py` for 5 steps; confirm loss drops
-- [ ] Sample 4 abstract sequences with constrained decoding; confirm they parse
+- [x] 4-example toy batch through `bottlenecked_sft.py` for 5 steps; confirm loss drops
+      — done 2026-05-14, A100-40GB on n124. Loss 11.47 → 1.58 in 5 SGD steps.
+      0.28 s/step at seq_len 137 batch 4. Extrapolated to seq_len 1024 batch 8:
+      ~2 s/step → ~5 days for full warm-up (within Tier-1 budget).
+- [x] Sample 4 abstract sequences with constrained decoding; confirm they parse
+      — done 2026-05-14, model emitted legal abstract span + correct natural-
+      language response ("5 + 7 gives us 12.")
 - [ ] 4 GRPO steps with K=2 rollouts; confirm reward calls land and policy updates
 
 ## Exit
