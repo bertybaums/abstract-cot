@@ -30,6 +30,7 @@ fi
 
 python3 scripts/run_warmup.py \
     --config configs/granite_3b.yaml \
+    --data data/dolci_warmup_100k.jsonl \
     --output-dir outputs/warmup \
     $RESUME_FLAG
 
