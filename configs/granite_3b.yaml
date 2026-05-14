@@ -29,14 +29,14 @@ warmup:
     epochs: 3
     batch_size: 4
     grad_accum: 4
-    learning_rate: 2e-5                 # full FT; QLoRA variant uses 2e-4
+    learning_rate: 2.0e-5                 # full FT; QLoRA variant uses 2e-4
     warmup_ratio: 0.03
     embed_lr_multiplier: 10.0           # higher LR on new embedding rows
   self_distillation:
     epochs: 3
     batch_size: 4
     grad_accum: 4
-    learning_rate: 2e-5
+    learning_rate: 2.0e-5
     sampling:
       temperature: 1.0
       top_p: 0.95
@@ -46,7 +46,7 @@ rl:
   rollouts_per_prompt: 4                # K
   episodes: 100000                      # [scaled]
   batch_size: 4
-  learning_rate: 1e-6
+  learning_rate: 1.0e-6
   kl_coef: 0.04
   reward:
     backend: mindrouter

@@ -161,7 +161,7 @@ def main():
         T=T,
         epochs_per_phase=bsft_cfg["epochs"],
         batch_size=bsft_cfg["batch_size"],
-        learning_rate=bsft_cfg["learning_rate"],
+        learning_rate=float(bsft_cfg["learning_rate"]),
         max_length=data_cfg["max_seq_length"],
         m_max=codebook_cfg["m_max"],
         save_dir=str(out_dir),
