@@ -1,9 +1,23 @@
 # Abstract-CoT Reproduction — Plan
 
-**Date:** May 12, 2026
+**Date:** May 12, 2026 (updated May 14, 2026)
 **Author:** Bert Baumgaertner (RCDS, U of Idaho)
 **Paper:** Ramji, Naseem & Astudillo, *Thinking Without Words: Efficient Latent Reasoning with Abstract Chain-of-Thought*, arXiv:2604.22709v2 (April 27 2026), IBM Research AI.
-**Status:** pre-Phase-0 (folder seed, no code written, no jobs run)
+**Status:** Phase 0 complete; Phase 1 in flight (Dolci data prep + real-data smoke running)
+
+## Quick status snapshot (2026-05-14)
+
+| Layer | State | Evidence |
+|---|---|---|
+| Engineering (5 modules) | ✅ 53/53 unit tests | tokenizer, attention_masks, constrained_decoding, reward_model, bottlenecked_sft + self_distillation |
+| MindRouter (live probe) | ✅ HTTP 200 in <1s from compute node | `notes/latency-study-2026-05-12.md` |
+| Reasoning effort | locked: **medium** (ρ=0.946, 3.79s) | same |
+| Phase 0 exit gate (Granite toy) | ✅ loss 11.47→1.58 on A100 | `notes/phase0-toy-run-2026-05-14.md` |
+| Phase 1 pilot (1k synth, T=1) | ✅ 3 min on A100, both phases learn | `notes/phase1-pilot-2026-05-14.md` |
+| Dolci data prep | 🔄 streaming + length-filter at 79/s | ~1h to 100k examples |
+| Phase 1 smoke (2k real Dolci) | 🔄 running on n124 (job 5144715) | ~15-20 min |
+| Phase 1 full (100k, T=3, 3 ep) | pending smoke results | projected ~4 days on 1× A100 |
+| Phase 2 (GRPO) | not started | reward client done, trainer TBD |
 
 ---
 
