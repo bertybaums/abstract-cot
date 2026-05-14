@@ -5,7 +5,7 @@
 model:
   hf_id: ibm-granite/granite-4.0-micro
   dtype: bfloat16
-  attn_implementation: flex_attention  # for the block-structured mask
+  attn_implementation: eager  # 4D additive mask validated on eager path; flex variant TODO
   disable_thinking_mode: true           # paper compares without it
 
 codebook:
