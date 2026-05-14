@@ -115,6 +115,37 @@ def main():
     total_lens: list[int] = []
     t0 = time.monotonic()
 
+    # Batch-tokenize for ~10x speedup vs per-example encode loops.
+    # Buffer parsed-but-not-tokenized examples until we have BATCH, then
+    # tokenize prompts/cots/answers in three batch calls.
+    BATCH = 64
+    parsed_buf: list[dict] = []
+
+    def flush(parsed_buf: list[dict]):
+        nonlocal kept, n_too_long
+        if not parsed_buf:
+            return
+        prompts = [d["prompt"] for d in parsed_buf]
+        cots = [d["verbal_cot"] for d in parsed_buf]
+        answers = [d["answer"] for d in parsed_buf]
+        p_batch = tok(prompts, add_special_tokens=False)["input_ids"]
+        c_batch = tok(cots, add_special_tokens=False)["input_ids"]
+        a_batch = tok(answers, add_special_tokens=False)["input_ids"]
+        for d, pi, ci, ai in zip(parsed_buf, p_batch, c_batch, a_batch):
+            total = len(pi) + len(ci) + len(ai)
+            if total > max_text_tokens:
+                n_too_long += 1
+                continue
+            d["prompt_ids"] = pi
+            d["cot_ids"] = ci
+            d["answer_ids"] = ai
+            d["total_text_tokens"] = total
+            cot_lens.append(len(ci))
+            total_lens.append(total)
+            source_counts[d["source"]] = source_counts.get(d["source"], 0) + 1
+            f.write(json.dumps(d) + "\n")
+            kept += 1
+
     with out_path.open("w", encoding="utf-8") as f:
         for ex in ds:
             scanned += 1
@@ -124,7 +155,6 @@ def main():
 
             parsed = parse_example(ex)
             if parsed is None:
-                # Either no <think> wrapper or empty think/answer
                 msgs = ex.get("messages") or []
                 asst = next((m for m in msgs if m.get("role") == "assistant"), None)
                 c = (asst.get("content") or "") if asst else ""
@@ -132,48 +162,24 @@ def main():
                     n_empty_think += 1
                 else:
                     n_no_think += 1
-                if scanned % args.report_every == 0:
-                    elapsed = time.monotonic() - t0
-                    rate = scanned / max(elapsed, 1e-6)
-                    print(f"  scanned={scanned:>9d} kept={kept:>7d} "
-                          f"empty_think={n_empty_think} no_think={n_no_think} "
-                          f"too_long={n_too_long} rate={rate:.0f}/s")
-                continue
+            else:
+                parsed_buf.append(parsed)
+                if len(parsed_buf) >= BATCH:
+                    flush(parsed_buf)
+                    parsed_buf = []
 
-            # Tokenize and length-filter
-            p_ids = tok.encode(parsed["prompt"], add_special_tokens=False)
-            c_ids = tok.encode(parsed["verbal_cot"], add_special_tokens=False)
-            a_ids = tok.encode(parsed["answer"], add_special_tokens=False)
-            total = len(p_ids) + len(c_ids) + len(a_ids)
-            if total > max_text_tokens:
-                n_too_long += 1
-                if scanned % args.report_every == 0:
-                    elapsed = time.monotonic() - t0
-                    rate = scanned / max(elapsed, 1e-6)
-                    print(f"  scanned={scanned:>9d} kept={kept:>7d} "
-                          f"empty_think={n_empty_think} no_think={n_no_think} "
-                          f"too_long={n_too_long} rate={rate:.0f}/s")
-                continue
-
-            # Pre-tokenize and store for fast loading at train time
-            parsed["prompt_ids"] = p_ids
-            parsed["cot_ids"] = c_ids
-            parsed["answer_ids"] = a_ids
-            parsed["total_text_tokens"] = total
-            cot_lens.append(len(c_ids))
-            total_lens.append(total)
-            source_counts[parsed["source"]] = source_counts.get(parsed["source"], 0) + 1
-
-            f.write(json.dumps(parsed) + "\n")
-            kept += 1
             if scanned % args.report_every == 0:
                 elapsed = time.monotonic() - t0
                 rate = scanned / max(elapsed, 1e-6)
                 print(f"  scanned={scanned:>9d} kept={kept:>7d} "
                       f"empty_think={n_empty_think} no_think={n_no_think} "
-                      f"too_long={n_too_long} rate={rate:.0f}/s")
+                      f"too_long={n_too_long} rate={rate:.0f}/s",
+                      flush=True)
             if kept >= args.n:
                 break
+
+        # Final flush
+        flush(parsed_buf)
 
     elapsed = time.monotonic() - t0
     print()
