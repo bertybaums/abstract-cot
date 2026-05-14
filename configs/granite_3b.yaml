@@ -5,7 +5,7 @@
 model:
   hf_id: ibm-granite/granite-4.0-micro
   dtype: bfloat16
-  attn_implementation: eager  # 4D additive mask validated on eager path; flex variant TODO
+  attn_implementation: sdpa  # SDPA supports 4D additive masks and is memory-efficient (no quadratic intermediate)
   disable_thinking_mode: true           # paper compares without it
 
 codebook:
@@ -27,14 +27,14 @@ warmup:
   policy_iterations: 3                  # T in Algorithm 1
   bottlenecked_sft:
     epochs: 3
-    batch_size: 4
+    batch_size: 2
     grad_accum: 4
     learning_rate: 2.0e-5                 # full FT; QLoRA variant uses 2e-4
     warmup_ratio: 0.03
     embed_lr_multiplier: 10.0           # higher LR on new embedding rows
   self_distillation:
     epochs: 3
-    batch_size: 4
+    batch_size: 2
     grad_accum: 4
     learning_rate: 2.0e-5
     sampling:

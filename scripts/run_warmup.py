@@ -136,7 +136,12 @@ def main():
         dtype=torch.bfloat16,
         attn_implementation=model_cfg["attn_implementation"],
     ).to(device)
-    log.info("Loaded in %.1fs; params=%.2fB", time.monotonic() - t0,
+    # Activation checkpointing — trade ~30% slower step for ~5-10x less
+    # activation memory. Essential at seq_len 2048 on a single A100-40GB.
+    model.gradient_checkpointing_enable()
+    model.config.use_cache = False
+    log.info("Loaded in %.1fs; params=%.2fB (gradient_checkpointing=on)",
+             time.monotonic() - t0,
              sum(p.numel() for p in model.parameters()) / 1e9)
 
     # Extend tokenizer only on a fresh load (resume keeps the extended tokenizer)
