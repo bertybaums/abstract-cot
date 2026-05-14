@@ -1,16 +1,15 @@
 # Phase 0 Checklist
 
-**Date:** May 12, 2026
-**Goal:** prove the engineering pieces work end-to-end on a 4-example toy batch.
+**Date:** May 12 → May 14, 2026
+**Status: CLOSED (2026-05-14).** All engineering pieces validated; pilot passed on real Granite. Continuing into Phase 1 (Dolci data prep + multi-day warm-up).
 **Exit criterion:** see PLAN.md §9, Phase 0.
 
 ## Environment
-- [ ] On fortyfive login node: `python -m venv ~/venvs/abscot`
-- [ ] Activate; `pip install --upgrade pip`
-- [ ] Install PyTorch 2.6 cu124: `pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124`
-- [ ] Install: `transformers>=4.46 trl>=0.13 peft bitsandbytes datasets accelerate openai pyyaml`
-- [ ] Install flash-attn (only on Ampere+ nodes): `pip install flash-attn --no-build-isolation`
-- [ ] Snapshot: `pip freeze > requirements.lock`
+- [x] On fortyfive login node: `python -m venv ~/venvs/abscot` — done 2026-05-12
+- [x] PyTorch 2.6.0+cu124 installed
+- [x] transformers 5.8.0, trl 1.4.0, peft 0.19.1, bitsandbytes 0.49.2, datasets 4.8.5, accelerate 1.13.0, openai 2.36.0 — installed
+- [ ] flash-attn (Ampere+) — deferred; eager attention is sufficient for the bottleneck mask
+- [ ] requirements.lock — deferred
 
 ## Paper extraction
 - [ ] Save full paper PDF to `notes/paper-v2.pdf`
