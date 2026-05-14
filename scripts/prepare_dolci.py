@@ -86,6 +86,9 @@ def main():
     p.add_argument("--max-scan", type=int, default=2_000_000,
                    help="max examples to scan before giving up")
     p.add_argument("--report-every", type=int, default=2000)
+    p.add_argument("--shuffle-buffer", type=int, default=50_000,
+                   help="streaming shuffle buffer size (0 disables)")
+    p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 
     out_path = Path(args.out)
@@ -98,6 +101,9 @@ def main():
 
     print(f"Streaming {args.dataset}…")
     ds = load_dataset(args.dataset, split="train", streaming=True)
+    if args.shuffle_buffer > 0:
+        print(f"  shuffle buffer={args.shuffle_buffer}, seed={args.seed}")
+        ds = ds.shuffle(seed=args.seed, buffer_size=args.shuffle_buffer)
 
     kept = 0
     scanned = 0
